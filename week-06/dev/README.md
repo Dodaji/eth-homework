@@ -1,120 +1,131 @@
-# Week 6: 최종 프로젝트 - 나만의 dApp
+# SimpleVoting - 간단한 1인 1표 투표 시스템
 
-6주간 배운 내용을 총동원하여 나만의 dApp을 만들어보세요!
+## 프로젝트 소개
 
-## 개요
+**SimpleVoting**은 이더리움 스마트 컨트랙트를 이용한 온체인 투표 시스템입니다.
 
-**자유 주제**로 dApp을 개발합니다. 컨트랙트부터 프론트엔드까지 직접 구현하고, Sepolia 테스트넷에 배포합니다.
-
-**목표:**
-- 스마트 컨트랙트 설계 및 구현
-- Foundry로 테스트 작성
-- wagmi + RainbowKit으로 프론트엔드 연동
-- Sepolia 배포 및 검증
-
-## 체크리스트
-
-**반드시 [CHECKLIST.md](./CHECKLIST.md)의 모든 필수 항목을 충족해야 합니다.**
-
-주요 항목:
-- Smart Contract: Solidity 0.8.26+, 상태 변수, public 함수, 이벤트, 테스트 5개+
-- Frontend: Next.js, wagmi, RainbowKit, 컨트랙트 연동, 에러 처리
-- Deployment: Sepolia 배포, 컨트랙트 주소 README 기재
-
-## 아이디어 예시
-
-아이디어가 떠오르지 않는다면 아래 예시를 참고하세요:
-
-### 1. 간단한 투표 시스템
-- 후보자 등록
-- 투표하기 (1인 1표)
-- 결과 조회
-
-```solidity
-// 핵심 기능
-mapping(address => bool) public hasVoted;
-mapping(uint256 => uint256) public votes;
-function vote(uint256 candidateId) external { ... }
-```
-
-### 2. 기부/펀딩 컨트랙트
-- 목표 금액 설정
-- ETH 기부하기
-- 목표 달성 시 수령
-
-```solidity
-// 핵심 기능
-uint256 public goal;
-function donate() external payable { ... }
-function withdraw() external { ... }
-```
-
-### 3. 메시지 저장소
-- 메시지 작성 (on-chain)
-- 메시지 목록 조회
-- 작성자별 필터링
-
-```solidity
-// 핵심 기능
-struct Message { address author; string content; uint256 timestamp; }
-Message[] public messages;
-function post(string calldata content) external { ... }
-```
-
-### 4. 간단한 NFT 민팅
-- ERC721 기본 구현
-- 민팅 기능
-- 소유자 확인
-
-```solidity
-// 핵심 기능 (OpenZeppelin 사용 가능)
-function mint() external { ... }
-function tokenURI(uint256 tokenId) public view returns (string memory) { ... }
-```
-
-### 5. 에스크로 컨트랙트
-- 구매자가 ETH 예치
-- 판매자가 배송 후 확인
-- 구매자 확인 후 ETH 지급
-
-```solidity
-// 핵심 기능
-enum State { Created, Funded, Shipped, Completed }
-State public state;
-function fund() external payable { ... }
-function confirmReceived() external { ... }
-```
-
-## 참고 자료
-
-- [최종 프로젝트 상세 가이드](/eth-materials/week-06/dev/final-project.md)
-- [wagmi 가이드](/eth-materials/week-04/dev/wagmi-basics.md)
-- [RainbowKit 가이드](/eth-materials/week-05/dev/rainbowkit-guide.md)
-- [프론트엔드 템플릿](/eth-materials/resources/frontend-template/)
-
-## 제출 방법
-
-1. `week-06/dev/` 폴더에 프로젝트 코드 작성
-2. README.md에 프로젝트 설명, 기술 스택, 컨트랙트 주소 기재
-3. [CHECKLIST.md](./CHECKLIST.md)를 PR 본문에 복사하고 완료 항목 체크
-4. PR 생성
-
-## 제출 마감
-
-**마감일: [TBD]**
-
-마감 후에는 PR을 생성할 수 없습니다. 여유를 두고 미리 제출하세요!
-
-## 발표
-
-최종 발표에서 프로젝트를 시연합니다:
-- 5분 발표 + 2분 Q&A
-- 데모 시연 필수
-- 코드 설명 선택
+- 관리자(Owner)가 후보자를 등록합니다.
+- 각 사용자는 지갑 주소당 1번만 투표할 수 있습니다 **(1인 1표)**.
+- 모든 투표 결과는 블록체인에 투명하게 기록됩니다.
 
 ---
 
-> **응원의 말씀:**
-> 6주간 열심히 달려왔습니다. 마지막 프로젝트는 여러분이 배운 모든 것을 보여줄 기회입니다.
-> 완벽하지 않아도 괜찮습니다. 도전하고, 실패하고, 배우는 과정 자체가 가치 있습니다.
-> 화이팅!
+## 기술 스택
+
+| 레이어       | 기술                                   |
+|------------|---------------------------------------|
+| Smart Contract | Solidity 0.8.26, Foundry (forge) |
+| 프론트엔드 (가이드) | Next.js, wagmi, RainbowKit        |
+| 테스트 네트워크   | Sepolia Testnet                    |
+
+---
+
+## 컨트랙트 기능
+
+### 상태 변수
+| 변수 | 설명 |
+|-----|------|
+| `candidates` | 후보자 이름 목록 (string 배열) |
+| `votes` | 후보자별 득표 수 (mapping) |
+| `hasVoted` | 투표 여부 관리 (mapping) |
+| `owner` | 관리자 주소 |
+
+### 함수
+| 함수 | 권한 | 설명 |
+|-----|------|------|
+| `vote(candidateId)` | 모든 사용자 | 특정 후보에게 1표 투표 |
+| `addCandidate(name)` | Owner만 | 새 후보자 추가 |
+| `getCandidatesCount()` | Public | 전체 후보자 수 반환 |
+| `getCandidate(id)` | Public | 후보자 이름 및 득표 수 반환 |
+
+### 이벤트
+- `CandidateAdded(candidateId, name)` - 후보자 추가 시 발생
+- `Voted(voter, candidateId)` - 투표 시 발생
+
+---
+
+## 설치 및 실행
+
+### 사전 준비
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) 설치
+
+### 테스트 실행
+
+```bash
+# 저장소 최상단 경로에서 실행
+forge test --match-path "week-06/dev/test/*.sol" -vvv
+```
+
+### Sepolia 배포
+
+1. `.env` 파일 설정:
+```bash
+cp .env.example .env
+# 아래 항목을 .env에 입력
+# PRIVATE_KEY=0x...
+# SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
+```
+
+2. 배포 실행:
+```bash
+forge script week-06/dev/script/DeploySimpleVoting.s.sol \
+  --rpc-url $SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast -vvvv
+```
+
+---
+
+## 배포된 컨트랙트 주소 (Sepolia)
+
+> 📌 배포 완료 후 주소를 여기에 기재하세요.
+
+| 네트워크 | 컨트랙트 주소 |
+|---------|------------|
+| Sepolia | `TBD` |
+
+---
+
+## 프론트엔드 연동 안내 (wagmi)
+
+```tsx
+// ABI 일부 예시
+const votingABI = [
+  { name: 'vote', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: '_candidateId', type: 'uint256' }], outputs: [] },
+  { name: 'getCandidatesCount', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: 'getCandidate', type: 'function', stateMutability: 'view', inputs: [{ name: '_candidateId', type: 'uint256' }], outputs: [{ name: 'name', type: 'string' }, { name: 'voteCount', type: 'uint256' }] },
+] as const;
+
+// 컨트랙트 읽기 (후보자 수)
+const { data: count } = useReadContract({ address: CONTRACT_ADDRESS, abi: votingABI, functionName: 'getCandidatesCount' });
+
+// 컨트랙트 쓰기 (투표)
+const { writeContract } = useWriteContract();
+const handleVote = (candidateId: number) => {
+  writeContract({ address: CONTRACT_ADDRESS, abi: votingABI, functionName: 'vote', args: [BigInt(candidateId)] });
+};
+```
+
+---
+
+## 체크리스트
+
+### Technical Checklist (기술 요구사항)
+
+#### Smart Contract
+- [x] Solidity 0.8.26 이상 사용
+- [x] 최소 1개 이상의 상태 변수 (`candidates`, `votes`, `hasVoted`, `owner`)
+- [x] 최소 2개 이상의 public/external 함수 (`vote`, `addCandidate`, `getCandidatesCount`, `getCandidate`)
+- [x] 모든 상태 변경 함수에 이벤트 발생 (`Voted`, `CandidateAdded`)
+- [x] Foundry 테스트 작성 (총 6개 테스트)
+- [x] CEI 패턴 적용 (Check → Effect → Interaction 순서)
+
+#### Frontend (가이드 코드 기준)
+- [x] wagmi `useReadContract`로 컨트랙트 상태 읽기
+- [x] wagmi `useWriteContract`로 컨트랙트 상태 쓰기
+- [ ] Next.js App Router 사용 (프론트엔드 미구현)
+- [ ] RainbowKit 지갑 연결 (프론트엔드 미구현)
+
+#### Deployment
+- [ ] Sepolia 배포 (배포 스크립트 작성 완료, 실제 배포 미완)
+- [ ] 컨트랙트 주소 기재 (배포 후 업데이트 필요)
